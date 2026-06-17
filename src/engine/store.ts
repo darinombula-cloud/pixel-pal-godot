@@ -97,8 +97,8 @@ export function createProject(name: string, mode: Mode): SceneDoc {
 function defaultStarterNodes(mode: Mode): GameNode[] {
   if (mode === "2d") {
     return [
-      makeNode("camera2d", "Camera", { x: 0, y: 0 }, { zoom: 1, follow: "Player", offsetX: 0, offsetY: 0, lerp: 0.15 }),
-      makeNode("player2d", "Player", { x: 0, y: 0 }, { color: "#7bf1a8", w: 40, h: 56, image: "", hp: 100, maxHp: 100, collisionEnabled: true, collisionTag: "player" }, [
+      makeNode("camera2d", "Camera", { x: -820, y: 0 }, { zoom: 1, follow: "Player", offsetX: 0, offsetY: 0, lerp: 0.15 }),
+      makeNode("player2d", "Player", { x: -820, y: 0 }, { color: "#7bf1a8", w: 40, h: 56, image: "", hp: 100, maxHp: 100, collisionEnabled: true, collisionTag: "player" }, [
         { kind: "platformer", params: { speed: 280, runMul: 1.8, force: 560 } },
         { kind: "playerAttack", params: { damage: 1, range: 90, cooldown: 0.4, targetTag: "enemy" } },
       ]),
