@@ -32,6 +32,7 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
       rt.onLog = onLog;
       rt.start();
       rtRef.current = rt;
+      force((v) => v + 1);
       return () => { rt.stop(); rtRef.current = null; };
     } else {
       drawStatic();
