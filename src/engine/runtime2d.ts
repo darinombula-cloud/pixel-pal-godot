@@ -40,6 +40,7 @@ export class Runtime2D {
   cam = { x: 0, y: 0, zoom: 1 };
   onLog?: (msg: string) => void;
   images: Record<string, HTMLImageElement> = {};
+  audios: HTMLAudioElement[] = [];
 
   constructor(doc: SceneDoc, canvas: HTMLCanvasElement) {
     this.doc = doc; this.canvas = canvas;
@@ -52,6 +53,7 @@ export class Runtime2D {
     this.running = true;
     this.last = performance.now();
     this.preload();
+    this.setupAudio();
     this.initScripts();
     this.raf = requestAnimationFrame(this.tick);
   }
@@ -60,6 +62,8 @@ export class Runtime2D {
     cancelAnimationFrame(this.raf);
     this.input.detach();
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
+    this.audios.forEach((a) => { a.pause(); a.currentTime = 0; });
+    this.audios = [];
   }
 
   preload() {
@@ -82,6 +86,18 @@ export class Runtime2D {
     const w = (a: GameNode[]) => a.forEach((n) => { if (n.visible !== false) { out.push(n); w(n.children); } });
     w(this.doc.nodes);
     return out;
+  }
+
+  private setupAudio() {
+    this.audios = [];
+    for (const n of this.allNodes()) {
+      if (n.type !== "audio2d" || !n.props.url) continue;
+      const audio = new Audio(String(n.props.url));
+      audio.loop = !!n.props.loop;
+      audio.volume = Math.max(0, Math.min(1, Number(n.props.volume ?? 1)));
+      this.audios.push(audio);
+      if (n.props.autoplay) audio.play().catch((e) => this.onLog?.("audio: " + e));
+    }
   }
 
   private stateOf(n: GameNode): NodeState {
