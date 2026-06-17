@@ -23,6 +23,8 @@ export class Input {
     window.removeEventListener("keyup", this.onKU);
   }
   private onKD = (e: KeyboardEvent) => {
+    const gameKeys = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyA", "KeyD", "KeyW", "KeyS", "Space", "ShiftLeft", "ShiftRight", "KeyE", "KeyJ", "KeyF"]);
+    if (gameKeys.has(e.code)) e.preventDefault();
     if (!this.keys.has(e.code)) this.pressed.add(e.code);
     this.keys.add(e.code);
   };

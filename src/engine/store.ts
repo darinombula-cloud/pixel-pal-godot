@@ -20,6 +20,26 @@ export function listProjects(): SceneDoc[] {
 export function getProject(id: string): SceneDoc | null { return loadAll()[id] ?? null; }
 export function deleteProject(id: string) { const all = loadAll(); delete all[id]; saveAll(all); }
 
+function withScenes(doc: SceneDoc): SceneDoc {
+  if (!doc.scenes?.length) {
+    const id = nanoid(8);
+    doc.scenes = [{ id, name: "Level 1", nodes: doc.nodes }];
+    doc.activeSceneId = id;
+    return doc;
+  }
+  const active = doc.scenes.find((s) => s.id === doc.activeSceneId) || doc.scenes[0];
+  doc.activeSceneId = active.id;
+  doc.nodes = active.nodes;
+  return doc;
+}
+
+function syncActiveScene(doc: SceneDoc) {
+  if (!doc.scenes?.length) return withScenes(doc);
+  const active = doc.scenes.find((s) => s.id === doc.activeSceneId);
+  if (active) active.nodes = doc.nodes;
+  return doc;
+}
+
 /** Set per-state animation images on the project's first Player node. */
 export function setPlayerAnimations(id: string, anims: Record<string, string>) {
   const all = loadAll();
@@ -45,6 +65,8 @@ export function setPlayerAnimations(id: string, anims: Record<string, string>) {
 }
 
 export function createProject(name: string, mode: Mode): SceneDoc {
+  const nodes = defaultStarterNodes(mode);
+  const firstSceneId = nanoid(8);
   const doc: SceneDoc = {
     id: nanoid(10),
     name,
@@ -60,7 +82,9 @@ export function createProject(name: string, mode: Mode): SceneDoc {
       ground2d: defaultGround(),
       usePhysics3d: false,
     },
-    nodes: defaultStarterNodes(mode),
+    nodes,
+    scenes: [{ id: firstSceneId, name: "Level 1", nodes }],
+    activeSceneId: firstSceneId,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -73,8 +97,8 @@ export function createProject(name: string, mode: Mode): SceneDoc {
 function defaultStarterNodes(mode: Mode): GameNode[] {
   if (mode === "2d") {
     return [
-      makeNode("camera2d", "Camera", { x: 0, y: 0 }, { zoom: 1, follow: "Player", offsetX: 0, offsetY: 0, lerp: 0.15 }),
-      makeNode("player2d", "Player", { x: 0, y: 0 }, { color: "#7bf1a8", w: 40, h: 56, image: "", hp: 100, maxHp: 100, collisionEnabled: true, collisionTag: "player" }, [
+      makeNode("camera2d", "Camera", { x: -820, y: 0 }, { zoom: 1, follow: "Player", offsetX: 0, offsetY: 0, lerp: 0.15 }),
+      makeNode("player2d", "Player", { x: -820, y: 0 }, { color: "#7bf1a8", w: 40, h: 56, image: "", hp: 100, maxHp: 100, collisionEnabled: true, collisionTag: "player" }, [
         { kind: "platformer", params: { speed: 280, runMul: 1.8, force: 560 } },
         { kind: "playerAttack", params: { damage: 1, range: 90, cooldown: 0.4, targetTag: "enemy" } },
       ]),
@@ -161,6 +185,9 @@ interface EditorState {
   save: () => void;
   select: (id: string | null) => void;
   addNode: (n: GameNode) => void;
+  addChildNode: (parentId: string, n: GameNode) => void;
+  addScene: () => void;
+  switchScene: (id: string) => void;
   updateNode: (id: string, fn: (n: GameNode) => void) => void;
   removeNode: (id: string) => void;
   rename: (name: string) => void;
@@ -173,17 +200,46 @@ export const useEditor = create<EditorState>((set, get) => ({
   selectedId: null,
   enemyMode: false,
   setEnemyMode: (v) => set({ enemyMode: v }),
-  load: (id) => set({ doc: getProject(id), selectedId: null, enemyMode: false }),
+  load: (id) => set({ doc: getProject(id) ? withScenes(getProject(id)!) : null, selectedId: null, enemyMode: false }),
   setDoc: (d) => set({ doc: d }),
   save: () => {
     const d = get().doc; if (!d) return;
-    const all = loadAll(); d.updatedAt = Date.now(); all[d.id] = d; saveAll(all);
+    const all = loadAll(); syncActiveScene(d); d.updatedAt = Date.now(); all[d.id] = d; saveAll(all);
   },
   select: (id) => set({ selectedId: id }),
   addNode: (n) => {
     const d = get().doc; if (!d) return;
     d.nodes.push(n);
     set({ doc: { ...d }, selectedId: n.id });
+    get().save();
+  },
+  addChildNode: (parentId, n) => {
+    const d = get().doc; if (!d) return;
+    const parent = findNode(d, parentId);
+    if (!parent) return;
+    parent.children.push(n);
+    set({ doc: { ...d }, selectedId: n.id });
+    get().save();
+  },
+  addScene: () => {
+    const d = get().doc; if (!d) return;
+    syncActiveScene(d);
+    const index = (d.scenes?.length || 0) + 1;
+    const scene = { id: nanoid(8), name: `Level ${index}`, nodes: defaultStarterNodes(d.mode) };
+    d.scenes = [...(d.scenes || []), scene];
+    d.activeSceneId = scene.id;
+    d.nodes = scene.nodes;
+    set({ doc: { ...d }, selectedId: null });
+    get().save();
+  },
+  switchScene: (id) => {
+    const d = get().doc; if (!d || !d.scenes?.length) return;
+    syncActiveScene(d);
+    const scene = d.scenes.find((s) => s.id === id);
+    if (!scene) return;
+    d.activeSceneId = scene.id;
+    d.nodes = scene.nodes;
+    set({ doc: { ...d }, selectedId: null });
     get().save();
   },
   updateNode: (id, fn) => {

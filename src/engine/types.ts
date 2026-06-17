@@ -23,6 +23,7 @@ export type BehaviorKind =
   | "follow" | "orbit" | "rotate" | "oscillate" | "patrol"
   | "lookAt" | "billboard" | "screenWrap" | "bounce" | "chase"
   | "destroyAfter" | "spawnInterval" | "opacityPulse" | "scalePulse"
+  | "dash" | "limitToMap" | "teleportTo"
   | "clickAction" | "keyAction"
   | "onJoystick" | "moveOnJoystick" | "onCollide" | "damageOnContact"
   | "playerAttack";
@@ -84,12 +85,20 @@ export interface SceneSettings {
   usePhysics3d: boolean;
 }
 
+export interface ScenePage {
+  id: string;
+  name: string;
+  nodes: GameNode[];
+}
+
 export interface SceneDoc {
   id: string;
   name: string;
   mode: Mode;
   settings: SceneSettings;
   nodes: GameNode[];
+  scenes?: ScenePage[];
+  activeSceneId?: string;
   createdAt: number;
   updatedAt: number;
 }

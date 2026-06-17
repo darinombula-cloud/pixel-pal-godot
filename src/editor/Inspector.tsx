@@ -69,6 +69,19 @@ export function Inspector() {
     }
   };
 
+  const onAudio = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    const dataUrl: string = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result));
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    });
+    set((n) => { n.props.url = dataUrl; });
+    toast.success("Audio imported");
+    e.target.value = "";
+  };
+
   return (
     <div className="overflow-auto h-full text-sm">
       <Tabs defaultValue="props" className="w-full">
@@ -142,6 +155,14 @@ export function Inspector() {
                       {removingBg ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
                       {removingBg ? "Removing background…" : "Upload image (auto-removes background)"}
                       <input type="file" accept="image/*" className="hidden" onChange={onImage} disabled={removingBg} />
+                    </label>
+                  </div>
+                ) : k === "url" && (node.type === "audio2d" || node.type === "audio3d") ? (
+                  <div className="space-y-1">
+                    <Input value={v ?? ""} placeholder="URL or data:audio..." onChange={(e) => set((n) => { n.props[k] = e.target.value; })} className="h-7" />
+                    <label className="flex items-center gap-1 text-[10px] cursor-pointer hover:text-primary">
+                      <Upload className="w-3 h-3" /> Import audio from phone
+                      <input type="file" accept="audio/*" className="hidden" onChange={onAudio} />
                     </label>
                   </div>
                 ) : k === "grid" || k === "points" ? (

@@ -87,7 +87,10 @@
     background: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-display);
+    overscroll-behavior: none;
+    touch-action: manipulation;
   }
+  html { -webkit-text-size-adjust: 100%; }
   ::selection { background: oklch(0.78 0.20 145 / 0.35); }
 }
 

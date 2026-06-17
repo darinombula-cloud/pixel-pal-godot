@@ -185,6 +185,30 @@ const REGISTRY: Record<string, Fn> = {
     const v = base + Math.sin(s._t * Number(p.speed ?? 3)) * amp;
     n.transform.sx = v; n.transform.sy = v; if (c.mode === "3d") n.transform.sz = v;
   },
+  dash: (n, p, c) => {
+    const s = c.state as any;
+    s._dashCd = (s._dashCd ?? 0) - c.dt;
+    if (!c.input.wasPressed(String(p.key || "KeyK")) || s._dashCd > 0) return;
+    const a = c.input.axis();
+    const dist = Number(p.distance ?? (c.mode === "2d" ? 120 : 3));
+    n.transform.x += (a.x || 1) * dist;
+    if (c.mode === "2d") n.transform.y += a.y * dist;
+    else n.transform.z += a.y * dist;
+    s._dashCd = Number(p.cooldown ?? 0.6);
+  },
+  limitToMap: (n, _p, c) => {
+    if (c.mode !== "2d") return;
+    const w = c.doc.settings.width / 2;
+    const h = c.doc.settings.height / 2;
+    n.transform.x = Math.max(-w, Math.min(w, n.transform.x));
+    n.transform.y = Math.max(-h, Math.min(h, n.transform.y));
+  },
+  teleportTo: (n, p, c) => {
+    if (!c.input.wasPressed(String(p.key || "KeyT"))) return;
+    n.transform.x = Number(p.x ?? 0);
+    n.transform.y = Number(p.y ?? n.transform.y);
+    if (c.mode === "3d") n.transform.z = Number(p.z ?? 0);
+  },
   clickAction: () => { /* handled by runtime click handler */ },
   keyAction: (_n, _p, _c) => { /* runtime polls and runs script */ },
   onJoystick: (n, p, c) => {
@@ -268,6 +292,9 @@ export const BEHAVIOR_META: Record<string, { label: string; mode?: "2d" | "3d" |
   destroyAfter:{ label: "Destroy After", mode: "any", params: [{ key: "seconds", type: "number", default: 3, label: "Seconds" }] },
   opacityPulse:{ label: "Opacity Pulse", mode: "any", params: [{ key: "min", type: "number", default: 0.2, label: "Min" }, { key: "max", type: "number", default: 1, label: "Max" }, { key: "speed", type: "number", default: 2, label: "Speed" }] },
   scalePulse:  { label: "Scale Pulse", mode: "any", params: [{ key: "base", type: "number", default: 1, label: "Base" }, { key: "amplitude", type: "number", default: 0.15, label: "Amplitude" }, { key: "speed", type: "number", default: 3, label: "Speed" }] },
+  dash:        { label: "Dash", mode: "any", params: [{ key: "key", type: "text", default: "KeyK", label: "Key code" }, { key: "distance", type: "number", default: 120, label: "Distance" }, { key: "cooldown", type: "number", default: 0.6, label: "Cooldown" }] },
+  limitToMap:  { label: "Limit To Map", mode: "2d", params: [] },
+  teleportTo:  { label: "Teleport To", mode: "any", params: [{ key: "key", type: "text", default: "KeyT", label: "Key code" }, { key: "x", type: "number", default: 0, label: "X" }, { key: "y", type: "number", default: 0, label: "Y" }, { key: "z", type: "number", default: 0, label: "Z" }] },
   clickAction: { label: "On Click",   mode: "any", params: [{ key: "script", type: "text", default: "log('clicked')", label: "JS to run" }] },
   keyAction:   { label: "On Key",     mode: "any", params: [{ key: "key", type: "text", default: "KeyE", label: "Key code" }, { key: "script", type: "text", default: "log('pressed')", label: "JS to run" }] },
   onJoystick:  { label: "On Joystick", mode: "any", params: [{ key: "direction", type: "text", default: "any", label: "Direction (up/down/left/right/any)" }, { key: "script", type: "text", default: "log('joy')", label: "JS to run" }] },
