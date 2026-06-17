@@ -44,6 +44,7 @@ export class Runtime3D {
   private RAPIER: any = null;
   private texLoader = new THREE.TextureLoader();
   private camSmooth = new THREE.Vector3();
+  private audios: HTMLAudioElement[] = [];
 
   constructor(doc: SceneDoc, container: HTMLElement) {
     this.doc = doc; this.container = container;
@@ -68,13 +69,20 @@ export class Runtime3D {
   async start() {
     this.input.attach(this.renderer.domElement);
     this.build();
+    this.setupAudio();
     if (this.doc.settings.usePhysics3d) await this.initRapier();
     this.running = true;
     this.last = performance.now();
     this.initScripts();
     this.raf = requestAnimationFrame(this.tick);
   }
-  stop() { this.running = false; cancelAnimationFrame(this.raf); this.input.detach(); }
+  stop() {
+    this.running = false;
+    cancelAnimationFrame(this.raf);
+    this.input.detach();
+    this.audios.forEach((a) => { a.pause(); a.currentTime = 0; });
+    this.audios = [];
+  }
   dispose() { this.stop(); this.resizeObs?.disconnect(); this.renderer.dispose(); this.renderer.domElement.remove(); }
 
   private async initRapier() {
@@ -111,6 +119,18 @@ export class Runtime3D {
     const w = (a: GameNode[]) => a.forEach((n) => { out.push(n); w(n.children); });
     w(this.doc.nodes);
     return out;
+  }
+
+  private setupAudio() {
+    this.audios = [];
+    for (const n of this.allNodes()) {
+      if (n.type !== "audio3d" || !n.props.url) continue;
+      const audio = new Audio(String(n.props.url));
+      audio.loop = !!n.props.loop;
+      audio.volume = Math.max(0, Math.min(1, Number(n.props.volume ?? 1)));
+      this.audios.push(audio);
+      if (n.props.autoplay) audio.play().catch((e) => this.onLog?.("audio: " + e));
+    }
   }
 
   private build() {
