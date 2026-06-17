@@ -15,12 +15,26 @@ export function EditorShell({ id }: { id: string }) {
   const doc = useEditor((s) => s.doc);
   const enemyMode = useEditor((s) => s.enemyMode);
   const [playing, setPlaying] = useState(false);
+  const [consoleVisible, setConsoleVisible] = useState(true);
   const [logs, setLogs] = useState<{ t: number; m: string }[]>([]);
   const [mobile, setMobile] = useState<"none" | "left" | "right">("none");
   const { t } = useI18n();
   const shellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { load(id); }, [id, load]);
+
+  useEffect(() => {
+    const blockZoom = (e: WheelEvent) => { if (e.ctrlKey || e.metaKey) e.preventDefault(); };
+    const blockGesture = (e: Event) => e.preventDefault();
+    window.addEventListener("wheel", blockZoom, { passive: false });
+    window.addEventListener("gesturestart", blockGesture, { passive: false } as AddEventListenerOptions);
+    window.addEventListener("gesturechange", blockGesture, { passive: false } as AddEventListenerOptions);
+    return () => {
+      window.removeEventListener("wheel", blockZoom);
+      window.removeEventListener("gesturestart", blockGesture);
+      window.removeEventListener("gesturechange", blockGesture);
+    };
+  }, []);
 
   if (!doc) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t("notfound")}</div>;
 
@@ -43,6 +57,8 @@ export function EditorShell({ id }: { id: string }) {
           onStop={onStop}
           onToggleLeft={() => setMobile(mobile === "left" ? "none" : "left")}
           onToggleRight={() => setMobile(mobile === "right" ? "none" : "right")}
+          onToggleConsole={() => setConsoleVisible((v) => !v)}
+          consoleVisible={consoleVisible}
         />
       </div>
 
@@ -54,7 +70,7 @@ export function EditorShell({ id }: { id: string }) {
 
       <div className="flex-1 flex min-h-0 relative">
         {/* Left aside — hidden while playing */}
-        <aside className={`${playing ? "hidden" : ""} ${mobile === "left" ? "fixed inset-y-0 left-0 top-11 z-40 w-[78vw] max-w-xs shadow-2xl flex" : "hidden"} md:relative md:flex md:w-60 md:top-0 border-r flex-col bg-sidebar animate-fade-in`}>
+        <aside className={`${playing ? "hidden" : ""} ${mobile === "left" ? "fixed inset-y-0 left-0 top-11 z-40 w-[78vw] max-w-xs shadow-2xl flex" : "hidden"} md:relative md:flex md:w-[clamp(12rem,18vw,16rem)] md:top-0 border-r flex-col bg-sidebar animate-fade-in`}>
           {mobile === "left" && (
             <div className="md:hidden flex justify-end p-1.5 border-b">
               <button onClick={() => setMobile("none")} className="p-1.5 hover:bg-accent rounded-md"><X className="w-4 h-4" /></button>
@@ -70,7 +86,7 @@ export function EditorShell({ id }: { id: string }) {
             ? <Viewport2D playing={playing} onLog={log} />
             : <Viewport3D playing={playing} onLog={log} />}
           {/* Console — hidden on mobile while playing so the game viewport fills the screen */}
-          <div className={`${playing ? "hidden sm:block" : ""} h-16 sm:h-32 border-t bg-sidebar overflow-auto`}>
+          <div className={`${consoleVisible ? "" : "hidden"} ${playing ? "hidden sm:block" : ""} h-[clamp(4rem,18vh,8rem)] border-t bg-sidebar overflow-auto`}>
             <div className="sticky top-0 flex items-center gap-2 px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground bg-sidebar border-b">
               <Terminal className="w-3 h-3" /> {t("console.title")}
               <span className="ml-auto">{t("console.entries", { n: logs.length })}</span>
@@ -88,17 +104,26 @@ export function EditorShell({ id }: { id: string }) {
           </div>
           {/* Floating Stop button — only visible on mobile during Play (since topbar is hidden) */}
           {playing && (
-            <button
-              onClick={onStop}
-              className="md:hidden absolute top-3 right-3 z-50 flex items-center gap-1 rounded-full bg-destructive text-destructive-foreground px-3 py-1.5 text-xs font-semibold shadow-lg"
-            >
-              <Square className="w-3.5 h-3.5" /> {t("topbar.stop")}
-            </button>
+            <div className="md:hidden absolute top-3 right-3 z-50 flex items-center gap-2">
+              <button
+                onClick={() => setConsoleVisible((v) => !v)}
+                className="grid h-8 w-8 place-items-center rounded-full bg-sidebar text-sidebar-foreground shadow-lg"
+                aria-label="Console"
+              >
+                <Terminal className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={onStop}
+                className="flex items-center gap-1 rounded-full bg-destructive text-destructive-foreground px-3 py-1.5 text-xs font-semibold shadow-lg"
+              >
+                <Square className="w-3.5 h-3.5" /> {t("topbar.stop")}
+              </button>
+            </div>
           )}
         </div>
 
         {/* Right aside — hidden while playing */}
-        <aside className={`${playing ? "hidden" : ""} ${mobile === "right" ? "fixed inset-y-0 right-0 top-11 z-40 w-[85vw] max-w-sm shadow-2xl block" : "hidden"} md:relative md:block md:w-80 md:top-0 border-l bg-sidebar animate-fade-in`}>
+        <aside className={`${playing ? "hidden" : ""} ${mobile === "right" ? "fixed inset-y-0 right-0 top-11 z-40 w-[85vw] max-w-sm shadow-2xl block" : "hidden"} md:relative md:block md:w-[clamp(17rem,25vw,22rem)] md:top-0 border-l bg-sidebar animate-fade-in`}>
           {mobile === "right" && (
             <div className="md:hidden flex justify-end p-1.5 border-b">
               <button onClick={() => setMobile("none")} className="p-1.5 hover:bg-accent rounded-md"><X className="w-4 h-4" /></button>
