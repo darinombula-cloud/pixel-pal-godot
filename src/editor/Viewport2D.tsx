@@ -36,7 +36,7 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
     } else {
       drawStatic();
     }
-  }, [playing, doc?.id, doc?.mode]);
+  }, [playing, doc?.id, doc?.mode, doc?.activeSceneId]);
 
   useEffect(() => { if (!playing) drawStatic(); });
 
@@ -220,7 +220,7 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
           className="block"
           style={{
             background: doc.settings.background,
-            width: playing ? "100%" : doc.settings.width,
+            width: playing ? "min(100%, " + doc.settings.width + "px)" : doc.settings.width,
             height: "100%",
             maxHeight: doc.settings.height,
             objectFit: "contain",
