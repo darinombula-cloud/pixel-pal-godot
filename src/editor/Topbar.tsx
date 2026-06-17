@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEditor } from "@/engine/store";
 import { exportHTML, download } from "@/engine/exporter";
-import { Play, Square, Download, ArrowLeft, Save, BookOpen, Gamepad2, Skull, PanelLeft, PanelRight } from "lucide-react";
+import { Play, Square, Download, ArrowLeft, Save, BookOpen, Gamepad2, Skull, PanelLeft, PanelRight, Plus, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/i18n";
@@ -9,17 +9,21 @@ import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { ProjectSwitcher } from "./ProjectSwitcher";
 
 export function Topbar({
-  playing, onPlay, onStop, onToggleLeft, onToggleRight,
+  playing, onPlay, onStop, onToggleLeft, onToggleRight, onToggleConsole, consoleVisible,
 }: {
   playing: boolean;
   onPlay: () => void;
   onStop: () => void;
   onToggleLeft?: () => void;
   onToggleRight?: () => void;
+  onToggleConsole?: () => void;
+  consoleVisible?: boolean;
 }) {
   const doc = useEditor((s) => s.doc);
   const rename = useEditor((s) => s.rename);
   const save = useEditor((s) => s.save);
+  const addScene = useEditor((s) => s.addScene);
+  const switchScene = useEditor((s) => s.switchScene);
   const enemyMode = useEditor((s) => s.enemyMode);
   const setEnemyMode = useEditor((s) => s.setEnemyMode);
   const { t } = useI18n();
@@ -40,6 +44,21 @@ export function Topbar({
         className="h-7 sm:h-8 w-24 sm:w-56 bg-background/50 shrink-0 text-xs sm:text-sm"
       />
       <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-md bg-primary/15 text-primary uppercase font-semibold tracking-wider shrink-0">{doc.mode}</span>
+      <div className="flex items-center gap-1 shrink-0">
+        <select
+          value={doc.activeSceneId || doc.scenes?.[0]?.id || ""}
+          onChange={(e) => switchScene(e.target.value)}
+          className="h-7 max-w-28 rounded-md border bg-background/50 px-2 text-xs outline-none sm:max-w-36"
+          aria-label="Scene"
+        >
+          {(doc.scenes || [{ id: doc.activeSceneId || "main", name: "Level 1", nodes: doc.nodes }]).map((s) => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+        <Button size="icon" variant="outline" onClick={addScene} className="h-7 w-7" title="Add level">
+          <Plus className="w-3.5 h-3.5" />
+        </Button>
+      </div>
       <div className="flex-1" />
       <Button
         size="sm"
@@ -52,6 +71,11 @@ export function Topbar({
       </Button>
       <Link to="/docs" className="text-xs text-muted-foreground hover:text-primary hidden md:flex items-center gap-1 px-2 shrink-0"><BookOpen className="w-3.5 h-3.5" />{t("nav.docs")}</Link>
       <div className="hidden md:block shrink-0"><LanguageSwitch compact /></div>
+      {onToggleConsole && (
+        <Button variant={consoleVisible ? "outline" : "ghost"} size="sm" onClick={onToggleConsole} className="shrink-0" title="Console">
+          <Terminal className="w-4 h-4" />
+        </Button>
+      )}
       <Button variant="ghost" size="sm" onClick={save} className="shrink-0"><Save className="w-4 h-4 sm:mr-1" /><span className="hidden sm:inline">{t("topbar.save")}</span></Button>
       {!playing
         ? <Button size="sm" onClick={onPlay} className="bg-grad-primary text-primary-foreground glow-primary hover:opacity-90 shrink-0"><Play className="w-4 h-4 sm:mr-1" /><span className="hidden sm:inline">{t("topbar.play")}</span></Button>
