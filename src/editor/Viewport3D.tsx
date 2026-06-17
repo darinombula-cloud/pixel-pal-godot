@@ -18,6 +18,7 @@ export function Viewport3D({ playing, onLog }: { playing: boolean; onLog: (m: st
   const wrapRef = useRef<HTMLDivElement>(null);
   const rtRef = useRef<Runtime3D | null>(null);
   const editorRef = useRef<EditorScene | null>(null);
+  const [, force] = useState(0);
   const [picker, setPicker] = useState<{ sx: number; sy: number; x: number; z: number } | null>(null);
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export function Viewport3D({ playing, onLog }: { playing: boolean; onLog: (m: st
       rt.onLog = onLog;
       rt.start();
       rtRef.current = rt;
+      force((v) => v + 1);
       return () => rt.dispose();
     } else {
       const es = new EditorScene(doc, wrapRef.current, (id) => select(id));
