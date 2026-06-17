@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { newNode, useEditor } from "@/engine/store";
 import type { GameNode } from "@/engine/types";
 import { Plus, Trash2 } from "lucide-react";
@@ -13,10 +13,9 @@ export function SceneTree() {
   const addChildNode = useEditor((s) => s.addChildNode);
   const [toDelete, setToDelete] = useState<GameNode | null>(null);
   const [menu, setMenu] = useState<{ node: GameNode; x: number; y: number } | null>(null);
+  const longPressTimer = useRef<number | null>(null);
   const { t } = useI18n();
   if (!doc) return null;
-
-  let longPressTimer: number | undefined;
 
   const Row = ({ n, depth }: { n: GameNode; depth: number }) => (
     <>
@@ -25,10 +24,10 @@ export function SceneTree() {
         onDoubleClick={(e) => { e.stopPropagation(); setToDelete(n); }}
         onPointerDown={(e) => {
           if (e.pointerType !== "touch") return;
-          longPressTimer = window.setTimeout(() => setMenu({ node: n, x: e.clientX, y: e.clientY }), 520);
+          longPressTimer.current = window.setTimeout(() => setMenu({ node: n, x: e.clientX, y: e.clientY }), 520);
         }}
-        onPointerUp={() => { if (longPressTimer) window.clearTimeout(longPressTimer); }}
-        onPointerCancel={() => { if (longPressTimer) window.clearTimeout(longPressTimer); }}
+        onPointerUp={() => { if (longPressTimer.current) window.clearTimeout(longPressTimer.current); }}
+        onPointerCancel={() => { if (longPressTimer.current) window.clearTimeout(longPressTimer.current); }}
         className={`group flex items-center gap-1 px-2 py-1.5 text-xs cursor-pointer hover:bg-accent select-none ${sel === n.id ? "bg-accent" : ""}`}
         style={{ paddingLeft: 8 + depth * 12 }}
         title="Long press to add child, double-tap to delete"
