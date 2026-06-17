@@ -35,7 +35,7 @@ export function Viewport3D({ playing, onLog }: { playing: boolean; onLog: (m: st
       editorRef.current = es;
       return () => es.dispose();
     }
-  }, [playing, doc?.id, doc?.mode]);
+  }, [playing, doc?.id, doc?.mode, doc?.activeSceneId]);
 
   useEffect(() => { editorRef.current?.refresh(doc, sel); }, [doc, sel]);
 
