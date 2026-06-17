@@ -20,7 +20,9 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
   const rtRef = useRef<Runtime2D | null>(null);
   const [, force] = useState(0);
   const [picker, setPicker] = useState<{ sx: number; sy: number; lx: number; ly: number } | null>(null);
+  const [sceneMenu, setSceneMenu] = useState<{ sx: number; sy: number; lx: number; ly: number } | null>(null);
   const drag = useRef<{ id: string; ox: number; oy: number } | null>(null);
+  const longPress = useRef<number | null>(null);
   const imgCache = useRef<Record<string, HTMLImageElement>>({});
 
   useEffect(() => {
@@ -148,6 +150,12 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
   const onDown = (e: React.PointerEvent) => {
     if (!doc || playing) return;
     const p = toLocal(e);
+    if (e.pointerType === "touch") {
+      longPress.current = window.setTimeout(() => {
+        drag.current = null;
+        setSceneMenu({ sx: e.clientX, sy: e.clientY, lx: Math.round(p.x), ly: Math.round(p.y) });
+      }, 540);
+    }
     if (enemyMode) {
       setPicker({ sx: (e as any).clientX, sy: (e as any).clientY, lx: Math.round(p.x), ly: Math.round(p.y) });
       return;
@@ -164,6 +172,7 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
     } else select(null);
   };
   const onMove = (e: React.PointerEvent) => {
+    if (longPress.current) { window.clearTimeout(longPress.current); longPress.current = null; }
     if (!drag.current) return;
     const p = toLocal(e);
     update(drag.current.id, (n) => {
@@ -172,7 +181,10 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
     });
     force((v) => v + 1);
   };
-  const onUp = () => { drag.current = null; };
+  const onUp = () => {
+    if (longPress.current) { window.clearTimeout(longPress.current); longPress.current = null; }
+    drag.current = null;
+  };
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -183,20 +195,17 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
   };
 
   if (!doc) return null;
-  // Allow scrolling further right so users can extend their maps horizontally.
-  const extraScroll = Math.max(400, Math.round(doc.settings.width * 0.5));
   return (
     <div
       ref={wrapRef}
-      className="relative flex-1 bg-grad-surface overflow-x-auto overflow-y-hidden p-2 sm:p-3"
+      className="relative flex-1 bg-grad-surface overflow-auto p-2 sm:p-3"
       style={{ touchAction: playing ? "none" : "pan-x" }}
     >
       <div
-        className="relative rounded-lg overflow-hidden shadow-2xl ring-1 ring-primary/20"
+        className="relative h-full min-w-full overflow-hidden rounded-lg shadow-2xl ring-1 ring-primary/20"
         style={{
-          width: doc.settings.width + extraScroll,
-          height: "100%",
-          minWidth: doc.settings.width,
+          width: "max-content",
+          background: doc.settings.background,
         }}
       >
         <canvas
@@ -211,9 +220,10 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
           className="block"
           style={{
             background: doc.settings.background,
-            width: doc.settings.width,
+            width: playing ? "100%" : doc.settings.width,
             height: "100%",
             maxHeight: doc.settings.height,
+            objectFit: "contain",
             touchAction: playing ? "none" : "pan-x",
           }}
         />
@@ -237,6 +247,20 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
           }}
         />
       )}
+      {sceneMenu && (
+        <div className="fixed z-50 min-w-48 rounded-md border bg-popover p-1 text-popover-foreground shadow-xl" style={{ left: sceneMenu.sx, top: sceneMenu.sy }}>
+          <button
+            onClick={() => {
+              add(newNode("node2d", { x: sceneMenu.lx, y: sceneMenu.ly }));
+              setSceneMenu(null);
+            }}
+            className="w-full rounded-sm px-2 py-2 text-left text-xs hover:bg-accent"
+          >
+            Ajouter une node dans la scène
+          </button>
+        </div>
+      )}
+      {sceneMenu && <div className="fixed inset-0 z-40" onPointerDown={() => setSceneMenu(null)} />}
     </div>
   );
 }
