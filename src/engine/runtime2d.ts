@@ -407,6 +407,14 @@ export class Runtime2D {
       } else ctx.fillRect(-w/2, -h/2, w, h);
     };
 
+    if (n.props.__bullet) {
+      const r = Number(n.props.r ?? n.props.w ?? 6) / 2;
+      ctx.fillStyle = n.props.color || "#ffffff";
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+      ctx.restore(); ctx.globalAlpha = 1;
+      return;
+    }
+
     switch (n.type) {
       case "sprite":
       case "animatedSprite":
