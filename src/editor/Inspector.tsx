@@ -362,3 +362,97 @@ function SceneSettingsPanel() {
     </div>
   );
 }
+
+const ANIM_SLOTS: { key: string; label: string }[] = [
+  { key: "idle", label: "Idle" },
+  { key: "walk", label: "Walk" },
+  { key: "run", label: "Run" },
+  { key: "jump", label: "Jump" },
+  { key: "hurt", label: "Hurt" },
+  { key: "die", label: "Die" },
+];
+
+function PlayerAnimationsSection() {
+  const doc = useEditor((s) => s.doc);
+  const setDoc = useEditor((s) => s.setDoc);
+  const [busy, setBusy] = useState<string | null>(null);
+  if (!doc) return null;
+  const findPlayer = (arr: GameNode[]): GameNode | null => {
+    for (const n of arr) {
+      if (n.type === "player2d" || n.type === "player3d") return n;
+      const c = findPlayer(n.children); if (c) return c;
+    }
+    return null;
+  };
+  const player = findPlayer(doc.nodes);
+  if (!player) return null;
+  const anims: Record<string, string> = (player.props.animations || {});
+
+  const pick = async (key: string, file?: File) => {
+    if (!file) return;
+    setBusy(key);
+    try {
+      const dataUrl: string = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(String(r.result));
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+      // Save raw immediately so import never gets stuck.
+      const apply = (url: string) => {
+        setPlayerAnimations(doc.id, { [key]: url });
+        const fresh = { ...doc };
+        const p = findPlayer(fresh.nodes);
+        if (p) {
+          p.props.animations = { ...(p.props.animations || {}), [key]: url };
+          if (key === "idle") p.props.image = url;
+          else if (!p.props.image) p.props.image = url;
+        }
+        setDoc(fresh);
+      };
+      apply(dataUrl);
+      removeBackground(dataUrl).then((out) => { if (out && out !== dataUrl) apply(out); }).catch(() => {});
+      toast.success(`${key} image imported`);
+    } catch {
+      toast.error("Could not read image");
+    } finally { setBusy(null); }
+  };
+
+  const clear = (key: string) => {
+    const fresh = { ...doc };
+    const p = findPlayer(fresh.nodes);
+    if (!p) return;
+    const a = { ...(p.props.animations || {}) };
+    delete a[key];
+    p.props.animations = a;
+    setDoc(fresh);
+  };
+
+  return (
+    <Section title="Player Animations (import from phone)">
+      <p className="text-[10px] text-muted-foreground mb-2">One image per action. Background removal is automatic but optional.</p>
+      <div className="grid grid-cols-3 gap-1.5">
+        {ANIM_SLOTS.map(({ key, label }) => {
+          const url = anims[key];
+          const loading = busy === key;
+          return (
+            <div key={key} className="rounded-md border border-primary/20 bg-background/40 p-1.5 flex flex-col items-center gap-1">
+              <div className="text-[10px] font-semibold text-primary">{label}</div>
+              <label className="relative w-full aspect-square rounded border border-dashed border-primary/30 bg-background/60 flex items-center justify-center cursor-pointer hover:border-primary overflow-hidden">
+                {loading ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : url ? (
+                  <>
+                    <img src={url} alt={label} className="w-full h-full object-contain" />
+                    <button type="button" onClick={(e) => { e.preventDefault(); clear(key); }} className="absolute top-0.5 right-0.5 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-0.5">
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </>
+                ) : <Upload className="w-4 h-4 text-muted-foreground" />}
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => pick(key, e.target.files?.[0])} disabled={loading} />
+              </label>
+            </div>
+          );
+        })}
+      </div>
+    </Section>
+  );
+}
