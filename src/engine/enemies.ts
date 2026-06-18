@@ -46,9 +46,9 @@ export function makeEnemy(kind: EnemyKind, mode: Mode, at: { x: number; y: numbe
           { kind: "damageOnContact", params: { damage: 10, targetTag: "player", interval: 0.6 } },
         ]);
       case "shooter":
-        return mk("Shooter", "rigidBody2d", { x, y, z: 0 }, { ...baseProps, color: "#d97c4a", solid: true }, [
+        return mk("Shooter", "rigidBody2d", { x, y, z: 0 }, { ...baseProps, color: "#d97c4a" }, [
           { kind: "lookAt", params: { target: "Player" } },
-          { kind: "spawnInterval", params: { interval: 1.2, template: "Bullet", x: 0, y: 0 } },
+          { kind: "shoot", params: { target: "Player", cooldown: 1.2, bulletSpeed: 360, bulletSize: 10, bulletColor: "#ffffff", damage: 8, lifetime: 2.5 } },
           { kind: "damageOnContact", params: { damage: 8, targetTag: "player", interval: 0.6 } },
         ]);
       case "patrol":
