@@ -53,7 +53,7 @@ export function MobileControls({ input, joystick, buttons }: {
   }, [input, joystick]);
 
   const stickStyle: React.CSSProperties = {
-    position: "absolute",
+    position: "fixed",
     [joystick.position === "bottom-right" ? "right" : "left"]: 16,
     bottom: 16,
     width: joystick.size, height: joystick.size,
@@ -64,6 +64,7 @@ export function MobileControls({ input, joystick, buttons }: {
     touchAction: "none",
     border: "2px solid " + joystick.knobColor + "55",
     backdropFilter: "blur(8px)",
+    zIndex: 61,
   };
   const knobStyle: React.CSSProperties = {
     position: "absolute",
