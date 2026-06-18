@@ -332,4 +332,14 @@ export const BEHAVIOR_META: Record<string, { label: string; mode?: "2d" | "3d" |
   onCollide:   { label: "On Collide", mode: "any", params: [{ key: "script", type: "text", default: "log('hit ' + other.name)", label: "JS — vars: self, other, log" }] },
   damageOnContact: { label: "Damage on Contact", mode: "any", params: [{ key: "damage", type: "number", default: 10, label: "Damage" }, { key: "targetTag", type: "text", default: "player", label: "Target tag" }, { key: "interval", type: "number", default: 0.6, label: "Hit interval (s)" }] },
   playerAttack: { label: "Player Attack", mode: "any", params: [{ key: "damage", type: "number", default: 1, label: "Damage / hit" }, { key: "range", type: "number", default: 90, label: "Range" }, { key: "cooldown", type: "number", default: 0.4, label: "Cooldown (s)" }, { key: "targetTag", type: "text", default: "enemy", label: "Target tag" }] },
+  shoot:       { label: "Shoot Bullets", mode: "any", params: [
+    { key: "target", type: "text", default: "Player", label: "Target name" },
+    { key: "cooldown", type: "number", default: 1, label: "Cooldown (s)" },
+    { key: "bulletSpeed", type: "number", default: 360, label: "Bullet speed" },
+    { key: "bulletSize", type: "number", default: 10, label: "Bullet size" },
+    { key: "bulletColor", type: "text", default: "#ffffff", label: "Bullet color" },
+    { key: "damage", type: "number", default: 8, label: "Damage" },
+    { key: "lifetime", type: "number", default: 2.5, label: "Lifetime (s)" },
+    { key: "targetTag", type: "text", default: "player", label: "Hit tag" },
+  ] },
 };
