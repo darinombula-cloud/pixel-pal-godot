@@ -19,12 +19,14 @@ export const ENEMY_PRESETS: EnemyPreset[] = [
 ];
 
 function mk(name: string, type: GameNode["type"], pos: { x: number; y: number; z: number }, props: Record<string, any>, behaviors: Behavior[]): GameNode {
+  // Enemies are sensors: they overlap the player to deal damage but never
+  // push/climb on top of physics bodies (no more stacking on the player).
   return {
     id: nanoid(8),
     name,
     type,
     transform: { ...defaultTransform(), x: pos.x, y: pos.y, z: pos.z },
-    props: { ...props, isEnemy: true, collisionEnabled: true, collisionTag: "enemy" },
+    props: { ...props, isEnemy: true, collisionEnabled: true, isSensor: true, solid: false, collisionTag: "enemy" },
     behaviors,
     children: [],
     visible: true,
