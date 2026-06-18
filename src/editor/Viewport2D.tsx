@@ -199,15 +199,12 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
   return (
     <div
       ref={wrapRef}
-      className="relative flex-1 bg-grad-surface overflow-auto p-2 sm:p-3"
+      className="relative flex-1 bg-grad-surface overflow-hidden p-1 sm:p-2"
       style={{ touchAction: playing ? "none" : "pan-x" }}
     >
       <div
-        className="relative h-full min-w-full overflow-hidden rounded-lg shadow-2xl ring-1 ring-primary/20"
-        style={{
-          width: "max-content",
-          background: doc.settings.background,
-        }}
+        className="relative w-full h-full overflow-hidden rounded-lg shadow-2xl ring-1 ring-primary/20"
+        style={{ background: doc.settings.background }}
       >
         <canvas
           ref={cvRef}
@@ -218,12 +215,9 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
           onPointerUp={onUp}
           onDragOver={(e) => e.preventDefault()}
           onDrop={onDrop}
-          className="block"
+          className="block w-full h-full"
           style={{
             background: doc.settings.background,
-            width: playing ? "min(100%, " + doc.settings.width + "px)" : doc.settings.width,
-            height: "100%",
-            maxHeight: doc.settings.height,
             objectFit: "contain",
             touchAction: playing ? "none" : "pan-x",
           }}
