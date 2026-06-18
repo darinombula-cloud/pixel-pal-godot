@@ -125,9 +125,9 @@ function Home() {
         onConfirm={() => { if (toDelete) { deleteProject(toDelete.id); setProjects(listProjects()); } setToDelete(null); }}
       />
       <PlayerAnimationsDialog
-        open={!!animatingFor}
-        onSkip={() => { if (animatingFor) goToEditor(animatingFor); }}
-        onConfirm={(anims) => { if (animatingFor) goToEditor(animatingFor, anims); }}
+        open={!!pendingName}
+        onSkip={() => finalizeProject()}
+        onConfirm={(anims) => finalizeProject(anims)}
       />
     </main>
   );
