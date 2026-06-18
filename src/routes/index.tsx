@@ -25,28 +25,26 @@ function Home() {
   const [projects, setProjects] = useState<SceneDoc[]>([]);
   const [creating, setCreating] = useState<"2d" | "3d" | null>(null);
   const [toDelete, setToDelete] = useState<SceneDoc | null>(null);
-  const [animatingFor, setAnimatingFor] = useState<string | null>(null);
+  const [pendingName, setPendingName] = useState<string | null>(null);
   const nav = useNavigate();
   const { t } = useI18n();
   useEffect(() => { setProjects(listProjects()); }, []);
 
   const confirmCreate = (name: string) => {
-    const mode = creating!;
     setCreating(null);
-    const d = createProject(name, mode);
-    if (mode === "2d") {
-      // Ask for player animation images before opening the editor.
-      setAnimatingFor(d.id);
-    } else {
-      nav({ to: "/editor/$id", params: { id: d.id } });
-    }
+    // Always ask for player animations BEFORE creating the project (mobile-first 2D).
+    setPendingName(name);
   };
 
-  const goToEditor = (id: string, anims?: PlayerAnimations) => {
-    if (anims && Object.keys(anims).length > 0) setPlayerAnimations(id, anims);
-    setAnimatingFor(null);
-    nav({ to: "/editor/$id", params: { id } });
+  const finalizeProject = (anims?: PlayerAnimations) => {
+    const name = pendingName;
+    setPendingName(null);
+    if (!name) return;
+    const d = createProject(name, "2d");
+    if (anims && Object.keys(anims).length > 0) setPlayerAnimations(d.id, anims);
+    nav({ to: "/editor/$id", params: { id: d.id } });
   };
+
 
   return (
     <main className="min-h-screen bg-background text-foreground">
