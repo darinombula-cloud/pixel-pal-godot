@@ -4,7 +4,7 @@ import { listProjects, createProject, deleteProject, setPlayerAnimations } from 
 import type { SceneDoc } from "@/engine/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Gamepad2, Trash2, Box, Square, BookOpen, Sparkles, Zap, Code2 } from "lucide-react";
+import { Gamepad2, Trash2, Square, BookOpen, Sparkles, Zap, Code2 } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { CreateProjectDialog } from "@/components/CreateProjectDialog";
@@ -25,28 +25,26 @@ function Home() {
   const [projects, setProjects] = useState<SceneDoc[]>([]);
   const [creating, setCreating] = useState<"2d" | "3d" | null>(null);
   const [toDelete, setToDelete] = useState<SceneDoc | null>(null);
-  const [animatingFor, setAnimatingFor] = useState<string | null>(null);
+  const [pendingName, setPendingName] = useState<string | null>(null);
   const nav = useNavigate();
   const { t } = useI18n();
   useEffect(() => { setProjects(listProjects()); }, []);
 
   const confirmCreate = (name: string) => {
-    const mode = creating!;
     setCreating(null);
-    const d = createProject(name, mode);
-    if (mode === "2d") {
-      // Ask for player animation images before opening the editor.
-      setAnimatingFor(d.id);
-    } else {
-      nav({ to: "/editor/$id", params: { id: d.id } });
-    }
+    // Always ask for player animations BEFORE creating the project (mobile-first 2D).
+    setPendingName(name);
   };
 
-  const goToEditor = (id: string, anims?: PlayerAnimations) => {
-    if (anims && Object.keys(anims).length > 0) setPlayerAnimations(id, anims);
-    setAnimatingFor(null);
-    nav({ to: "/editor/$id", params: { id } });
+  const finalizeProject = (anims?: PlayerAnimations) => {
+    const name = pendingName;
+    setPendingName(null);
+    if (!name) return;
+    const d = createProject(name, "2d");
+    if (anims && Object.keys(anims).length > 0) setPlayerAnimations(d.id, anims);
+    nav({ to: "/editor/$id", params: { id: d.id } });
   };
+
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -77,9 +75,6 @@ function Home() {
         <div className="flex flex-wrap gap-2 sm:gap-3 mt-8">
           <Button size="lg" onClick={() => setCreating("2d")} className="bg-grad-primary text-primary-foreground glow-primary hover:opacity-90">
             <Square className="w-4 h-4 mr-2" /> {t("home.cta.new2d")}
-          </Button>
-          <Button size="lg" variant="outline" onClick={() => setCreating("3d")} className="border-primary/40 hover:bg-primary/10">
-            <Box className="w-4 h-4 mr-2" /> {t("home.cta.new3d")}
           </Button>
           <Link to="/docs">
             <Button size="lg" variant="ghost"><BookOpen className="w-4 h-4 mr-2" />{t("home.cta.docs")}</Button>
@@ -130,9 +125,9 @@ function Home() {
         onConfirm={() => { if (toDelete) { deleteProject(toDelete.id); setProjects(listProjects()); } setToDelete(null); }}
       />
       <PlayerAnimationsDialog
-        open={!!animatingFor}
-        onSkip={() => { if (animatingFor) goToEditor(animatingFor); }}
-        onConfirm={(anims) => { if (animatingFor) goToEditor(animatingFor, anims); }}
+        open={!!pendingName}
+        onSkip={() => finalizeProject()}
+        onConfirm={(anims) => finalizeProject(anims)}
       />
     </main>
   );
