@@ -88,7 +88,7 @@ export function MobileControls({ input, joystick, buttons }: {
   };
 
   return (
-    <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 5 }}>
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 60 }}>
       {joystick.enabled && (
         <div ref={stick} style={stickStyle}>
           <div ref={hint} data-up="0" data-down="0" data-left="0" data-right="0" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
@@ -114,11 +114,12 @@ export function MobileControls({ input, joystick, buttons }: {
             onPointerUp={() => input.buttons.delete(b.key)}
             onPointerCancel={() => input.buttons.delete(b.key)}
             style={{
-              position: "absolute", right: b.x, bottom: b.y,
+              position: "fixed", right: b.x, bottom: b.y,
               width: b.size, height: b.size, borderRadius: "50%",
               background: b.color, color: "#0a1612", border: "none",
               fontWeight: 700, fontSize: b.size * 0.35,
               touchAction: "none", boxShadow: "0 4px 16px " + b.color + "66",
+              zIndex: 61,
             }}
           >{b.label}</button>
         ))}
