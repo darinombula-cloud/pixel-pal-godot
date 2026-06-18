@@ -314,7 +314,10 @@ function SceneSettingsPanel() {
         </Section>
       )}
 
+      <PlayerAnimationsSection />
+
       <Section title="Mobile Controls">
+
         <Field label="Show on Play"><Switch checked={s.mobileControls} onCheckedChange={(v) => setSettings((x) => { x.mobileControls = v; })} /></Field>
         <Field label="Joystick enabled"><Switch checked={s.joystick.enabled} onCheckedChange={(v) => setSettings((x) => { x.joystick.enabled = v; })} /></Field>
         <div className="grid grid-cols-2 gap-1">
