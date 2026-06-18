@@ -225,7 +225,8 @@ export const useEditor = create<EditorState>((set, get) => ({
     const d = get().doc; if (!d) return;
     syncActiveScene(d);
     const index = (d.scenes?.length || 0) + 1;
-    const scene = { id: nanoid(8), name: `Level ${index}`, nodes: defaultStarterNodes(d.mode) };
+    // New page is intentionally empty — a blank canvas for the next level.
+    const scene = { id: nanoid(8), name: `Level ${index}`, nodes: [] as GameNode[] };
     d.scenes = [...(d.scenes || []), scene];
     d.activeSceneId = scene.id;
     d.nodes = scene.nodes;

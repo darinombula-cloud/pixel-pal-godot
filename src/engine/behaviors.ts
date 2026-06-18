@@ -264,6 +264,42 @@ const REGISTRY: Record<string, Fn> = {
     }
     if (hit === 0) c.log?.(`${n.name} attacks (no target in range)`);
   },
+  shoot: (n, p, c) => {
+    const s = c.state as any;
+    s._shootCd = (s._shootCd ?? 0) - c.dt;
+    if (s._shootCd > 0) return;
+    s._shootCd = Number(p.cooldown ?? 1);
+    const targetName = String(p.target || "Player");
+    const target = findByName(c.doc, targetName);
+    let dx = 1, dy = 0, dz = 0;
+    if (target) {
+      dx = target.transform.x - n.transform.x;
+      if (c.mode === "2d") dy = target.transform.y - n.transform.y;
+      else dz = target.transform.z - n.transform.z;
+      const m = Math.hypot(dx, dy, dz) || 1;
+      dx /= m; dy /= m; dz /= m;
+    }
+    const sp = Number(p.bulletSpeed ?? (c.mode === "2d" ? 360 : 8));
+    const size = Number(p.bulletSize ?? (c.mode === "2d" ? 10 : 0.2));
+    const color = String(p.bulletColor || "#ffffff");
+    const dmg = Number(p.damage ?? 8);
+    const life = Number(p.lifetime ?? 2.5);
+    const tag = String(p.targetTag || "player");
+    const bullet: GameNode = {
+      id: "bullet_" + Math.random().toString(36).slice(2, 9),
+      name: "Bullet",
+      type: c.mode === "2d" ? "sprite" : "sphere",
+      transform: { x: n.transform.x, y: n.transform.y, z: n.transform.z, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 },
+      props: {
+        w: size, h: size, r: size, color,
+        collisionEnabled: true, isSensor: true, collisionTag: "bullet",
+        __bullet: true, __vx: dx * sp, __vy: dy * sp, __vz: dz * sp,
+        __life: life, __dmg: dmg, __targetTag: tag, __owner: n.id,
+      },
+      behaviors: [], children: [], visible: true,
+    };
+    c.doc.nodes.push(bullet);
+  },
 };
 
 function findByName(doc: SceneDoc, name: string): GameNode | null {
@@ -302,4 +338,14 @@ export const BEHAVIOR_META: Record<string, { label: string; mode?: "2d" | "3d" |
   onCollide:   { label: "On Collide", mode: "any", params: [{ key: "script", type: "text", default: "log('hit ' + other.name)", label: "JS — vars: self, other, log" }] },
   damageOnContact: { label: "Damage on Contact", mode: "any", params: [{ key: "damage", type: "number", default: 10, label: "Damage" }, { key: "targetTag", type: "text", default: "player", label: "Target tag" }, { key: "interval", type: "number", default: 0.6, label: "Hit interval (s)" }] },
   playerAttack: { label: "Player Attack", mode: "any", params: [{ key: "damage", type: "number", default: 1, label: "Damage / hit" }, { key: "range", type: "number", default: 90, label: "Range" }, { key: "cooldown", type: "number", default: 0.4, label: "Cooldown (s)" }, { key: "targetTag", type: "text", default: "enemy", label: "Target tag" }] },
+  shoot:       { label: "Shoot Bullets", mode: "any", params: [
+    { key: "target", type: "text", default: "Player", label: "Target name" },
+    { key: "cooldown", type: "number", default: 1, label: "Cooldown (s)" },
+    { key: "bulletSpeed", type: "number", default: 360, label: "Bullet speed" },
+    { key: "bulletSize", type: "number", default: 10, label: "Bullet size" },
+    { key: "bulletColor", type: "text", default: "#ffffff", label: "Bullet color" },
+    { key: "damage", type: "number", default: 8, label: "Damage" },
+    { key: "lifetime", type: "number", default: 2.5, label: "Lifetime (s)" },
+    { key: "targetTag", type: "text", default: "player", label: "Hit tag" },
+  ] },
 };

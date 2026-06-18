@@ -43,10 +43,12 @@ export function PlayerAnimationsDialog({
         r.onerror = rej;
         r.readAsDataURL(file);
       });
-      let out = dataUrl;
-      try { out = await removeBackground(dataUrl); }
-      catch { /* fallback to original */ }
-      setAnims((a) => ({ ...a, [key]: out }));
+      // Always store the raw image first so import never fails on mobile.
+      setAnims((a) => ({ ...a, [key]: dataUrl }));
+      // Try AI background removal in the background; swap in if it succeeds.
+      removeBackground(dataUrl)
+        .then((out) => { if (out && out !== dataUrl) setAnims((a) => ({ ...a, [key]: out })); })
+        .catch(() => { /* keep original */ });
     } catch {
       toast.error("Could not read image");
     } finally { setBusy(null); }

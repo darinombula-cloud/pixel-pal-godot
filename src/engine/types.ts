@@ -26,7 +26,7 @@ export type BehaviorKind =
   | "dash" | "limitToMap" | "teleportTo"
   | "clickAction" | "keyAction"
   | "onJoystick" | "moveOnJoystick" | "onCollide" | "damageOnContact"
-  | "playerAttack";
+  | "playerAttack" | "shoot";
 
 export interface Behavior {
   kind: BehaviorKind;

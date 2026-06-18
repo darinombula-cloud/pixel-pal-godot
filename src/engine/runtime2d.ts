@@ -252,6 +252,27 @@ export class Runtime2D {
       }
     }
 
+    // ---- Bullet step (lightweight, sensor-only) ----
+    for (const n of all) {
+      if (!n.props.__bullet) continue;
+      n.transform.x += Number(n.props.__vx || 0) * dt;
+      n.transform.y += Number(n.props.__vy || 0) * dt;
+      n.props.__life = Number(n.props.__life ?? 0) - dt;
+      if (n.props.__life <= 0) (n as any).__destroy = true;
+      const tag = String(n.props.__targetTag || "player");
+      for (const t of all) {
+        if (t === n || t.id === n.props.__owner) continue;
+        if (String(t.props.collisionTag || "") !== tag) continue;
+        if (this.aabb(n, t)) {
+          t.props.hp = Number(t.props.hp ?? 100) - Number(n.props.__dmg ?? 0);
+          this.onLog?.(`Bullet hit ${t.name} (hp=${t.props.hp})`);
+          if (t.props.hp <= 0) (t as any).__destroy = true;
+          (n as any).__destroy = true;
+          break;
+        }
+      }
+    }
+
     // ---- Generalized collision dispatch (sensors + onCollide + damageOnContact) ----
     const colliders = all.filter(isCollider);
     for (let i = 0; i < colliders.length; i++) {
@@ -385,6 +406,14 @@ export class Runtime2D {
         ctx.beginPath(); (ctx as any).roundRect(-w/2, -h/2, w, h, radius); ctx.fill();
       } else ctx.fillRect(-w/2, -h/2, w, h);
     };
+
+    if (n.props.__bullet) {
+      const r = Number(n.props.r ?? n.props.w ?? 6) / 2;
+      ctx.fillStyle = n.props.color || "#ffffff";
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+      ctx.restore(); ctx.globalAlpha = 1;
+      return;
+    }
 
     switch (n.type) {
       case "sprite":

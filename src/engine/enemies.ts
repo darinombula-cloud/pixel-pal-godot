@@ -19,12 +19,14 @@ export const ENEMY_PRESETS: EnemyPreset[] = [
 ];
 
 function mk(name: string, type: GameNode["type"], pos: { x: number; y: number; z: number }, props: Record<string, any>, behaviors: Behavior[]): GameNode {
+  // Enemies are sensors: they overlap the player to deal damage but never
+  // push/climb on top of physics bodies (no more stacking on the player).
   return {
     id: nanoid(8),
     name,
     type,
     transform: { ...defaultTransform(), x: pos.x, y: pos.y, z: pos.z },
-    props: { ...props, isEnemy: true, collisionEnabled: true, collisionTag: "enemy" },
+    props: { ...props, isEnemy: true, collisionEnabled: true, isSensor: true, solid: false, collisionTag: "enemy" },
     behaviors,
     children: [],
     visible: true,
@@ -44,9 +46,9 @@ export function makeEnemy(kind: EnemyKind, mode: Mode, at: { x: number; y: numbe
           { kind: "damageOnContact", params: { damage: 10, targetTag: "player", interval: 0.6 } },
         ]);
       case "shooter":
-        return mk("Shooter", "rigidBody2d", { x, y, z: 0 }, { ...baseProps, color: "#d97c4a", solid: true }, [
+        return mk("Shooter", "rigidBody2d", { x, y, z: 0 }, { ...baseProps, color: "#d97c4a" }, [
           { kind: "lookAt", params: { target: "Player" } },
-          { kind: "spawnInterval", params: { interval: 1.2, template: "Bullet", x: 0, y: 0 } },
+          { kind: "shoot", params: { target: "Player", cooldown: 1.2, bulletSpeed: 360, bulletSize: 10, bulletColor: "#ffffff", damage: 8, lifetime: 2.5 } },
           { kind: "damageOnContact", params: { damage: 8, targetTag: "player", interval: 0.6 } },
         ]);
       case "patrol":
@@ -71,9 +73,9 @@ export function makeEnemy(kind: EnemyKind, mode: Mode, at: { x: number; y: numbe
           { kind: "damageOnContact", params: { damage: 10, targetTag: "player", interval: 0.6 } },
         ]);
       case "shooter":
-        return mk("Shooter", "rigidBody3d", { x, y: y || 0.5, z }, { ...baseProps3, color: "#d97c4a", solid: true }, [
+        return mk("Shooter", "rigidBody3d", { x, y: y || 0.5, z }, { ...baseProps3, color: "#d97c4a" }, [
           { kind: "lookAt", params: { target: "Player" } },
-          { kind: "spawnInterval", params: { interval: 1.5, template: "Bullet" } },
+          { kind: "shoot", params: { target: "Player", cooldown: 1.5, bulletSpeed: 8, bulletSize: 0.2, bulletColor: "#ffffff", damage: 8, lifetime: 2.5 } },
           { kind: "damageOnContact", params: { damage: 8, targetTag: "player", interval: 0.6 } },
         ]);
       case "patrol":
