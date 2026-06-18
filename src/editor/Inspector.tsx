@@ -1,4 +1,4 @@
-import { useEditor, findNode, flatNodes } from "@/engine/store";
+import { useEditor, findNode, flatNodes, setPlayerAnimations } from "@/engine/store";
 import { BEHAVIOR_META } from "@/engine/behaviors";
 import type { BehaviorKind, GameNode } from "@/engine/types";
 import { Input } from "@/components/ui/input";
