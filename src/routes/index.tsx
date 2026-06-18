@@ -4,7 +4,7 @@ import { listProjects, createProject, deleteProject, setPlayerAnimations } from 
 import type { SceneDoc } from "@/engine/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Gamepad2, Trash2, Box, Square, BookOpen, Sparkles, Zap, Code2 } from "lucide-react";
+import { Gamepad2, Trash2, Square, BookOpen, Sparkles, Zap, Code2 } from "lucide-react";
 import { useI18n } from "@/i18n";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { CreateProjectDialog } from "@/components/CreateProjectDialog";
