@@ -264,6 +264,36 @@ const REGISTRY: Record<string, Fn> = {
     }
     if (hit === 0) c.log?.(`${n.name} attacks (no target in range)`);
   },
+  shoot: (n, p, c) => {
+    const s = c.state as any;
+    s._shootCd = (s._shootCd ?? 0) - c.dt;
+    if (s._shootCd > 0) return;
+    s._shootCd = Number(p.cooldown ?? 1);
+    const targetName = String(p.target || "Player");
+    const target = findByName(c.doc, targetName);
+    let dx = 1, dy = 0, dz = 0;
+    if (target) {
+      dx = target.transform.x - n.transform.x;
+      if (c.mode === "2d") dy = target.transform.y - n.transform.y;
+      else dz = target.transform.z - n.transform.z;
+      const m = Math.hypot(dx, dy, dz) || 1;
+      dx /= m; dy /= m; dz /= m;
+    }
+    const sp = Number(p.bulletSpeed ?? (c.mode === "2d" ? 360 : 8));
+    const size = Number(p.bulletSize ?? (c.mode === "2d" ? 10 : 0.2));
+    const color = String(p.bulletColor || "#ffffff");
+    const dmg = Number(p.damage ?? 8);
+    const life = Number(p.lifetime ?? 2.5);
+    const tag = String(p.targetTag || "player");
+    const queue = ((c as any).__bullets ||= []) as any[];
+    queue.push({
+      from: n,
+      mode: c.mode,
+      x: n.transform.x, y: n.transform.y, z: n.transform.z,
+      vx: dx * sp, vy: dy * sp, vz: dz * sp,
+      size, color, dmg, life, tag,
+    });
+  },
 };
 
 function findByName(doc: SceneDoc, name: string): GameNode | null {
