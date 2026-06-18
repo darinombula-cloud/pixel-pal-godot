@@ -76,9 +76,6 @@ function Home() {
           <Button size="lg" onClick={() => setCreating("2d")} className="bg-grad-primary text-primary-foreground glow-primary hover:opacity-90">
             <Square className="w-4 h-4 mr-2" /> {t("home.cta.new2d")}
           </Button>
-          <Button size="lg" variant="outline" onClick={() => setCreating("3d")} className="border-primary/40 hover:bg-primary/10">
-            <Box className="w-4 h-4 mr-2" /> {t("home.cta.new3d")}
-          </Button>
           <Link to="/docs">
             <Button size="lg" variant="ghost"><BookOpen className="w-4 h-4 mr-2" />{t("home.cta.docs")}</Button>
           </Link>
