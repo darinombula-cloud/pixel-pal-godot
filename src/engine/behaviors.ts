@@ -285,14 +285,20 @@ const REGISTRY: Record<string, Fn> = {
     const dmg = Number(p.damage ?? 8);
     const life = Number(p.lifetime ?? 2.5);
     const tag = String(p.targetTag || "player");
-    const queue = ((c as any).__bullets ||= []) as any[];
-    queue.push({
-      from: n,
-      mode: c.mode,
-      x: n.transform.x, y: n.transform.y, z: n.transform.z,
-      vx: dx * sp, vy: dy * sp, vz: dz * sp,
-      size, color, dmg, life, tag,
-    });
+    const bullet: GameNode = {
+      id: "bullet_" + Math.random().toString(36).slice(2, 9),
+      name: "Bullet",
+      type: c.mode === "2d" ? "sprite" : "sphere",
+      transform: { x: n.transform.x, y: n.transform.y, z: n.transform.z, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 },
+      props: {
+        w: size, h: size, r: size, color,
+        collisionEnabled: true, isSensor: true, collisionTag: "bullet",
+        __bullet: true, __vx: dx * sp, __vy: dy * sp, __vz: dz * sp,
+        __life: life, __dmg: dmg, __targetTag: tag, __owner: n.id,
+      },
+      behaviors: [], children: [], visible: true,
+    };
+    c.doc.nodes.push(bullet);
   },
 };
 
