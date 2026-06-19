@@ -145,7 +145,8 @@ export function NodePalette() {
             id: nanoid(8), name: file.name.replace(/\.[^.]+$/, "") || "Platform",
             type: "staticBody2d",
             transform: defaultTransform(),
-            props: { w, h, image: url, color: "#2a4a3a", solid: true, collisionEnabled: true },
+            // transparent color so the imported image renders alone (no green/grey block behind it)
+            props: { w, h, image: url, color: "transparent", solid: true, collisionEnabled: true },
             behaviors: [], children: [], visible: true,
           };
           add(node);

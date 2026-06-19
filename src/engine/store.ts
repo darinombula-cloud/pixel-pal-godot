@@ -65,8 +65,11 @@ export function setPlayerAnimations(id: string, anims: Record<string, string>) {
 }
 
 export function createProject(name: string, mode: Mode): SceneDoc {
-  const nodes = defaultStarterNodes(mode);
+  // New project is intentionally empty — no starter nodes, no default ground.
+  const nodes: GameNode[] = [];
   const firstSceneId = nanoid(8);
+  const ground = defaultGround();
+  ground.enabled = false;
   const doc: SceneDoc = {
     id: nanoid(10),
     name,
@@ -79,7 +82,7 @@ export function createProject(name: string, mode: Mode): SceneDoc {
       mobileControls: true,
       joystick: defaultJoystick(),
       buttons: defaultButtons(),
-      ground2d: defaultGround(),
+      ground2d: ground,
       usePhysics3d: false,
     },
     nodes,
@@ -94,6 +97,8 @@ export function createProject(name: string, mode: Mode): SceneDoc {
   return doc;
 }
 
+// Kept for reference / future "starter template" buttons.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function defaultStarterNodes(mode: Mode): GameNode[] {
   if (mode === "2d") {
     return [
