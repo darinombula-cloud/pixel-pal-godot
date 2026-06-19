@@ -28,6 +28,7 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
   const select = useEditor((s) => s.select);
   const update = useEditor((s) => s.updateNode);
   const add = useEditor((s) => s.addNode);
+  const updateSettings = useEditor((s) => s.updateSettings);
   const enemyMode = useEditor((s) => s.enemyMode);
   const setEnemyMode = useEditor((s) => s.setEnemyMode);
   const cvRef = useRef<HTMLCanvasElement>(null);
@@ -36,6 +37,8 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
   const [, force] = useState(0);
   const [picker, setPicker] = useState<{ sx: number; sy: number; lx: number; ly: number } | null>(null);
   const [sceneMenu, setSceneMenu] = useState<{ sx: number; sy: number; lx: number; ly: number } | null>(null);
+  // Editor camera (zoom + pan) — only affects the editor view, not the runtime.
+  const [view, setView] = useState({ zoom: 1, panX: 0, panY: 0 });
   const drag = useRef<{ id: string; ox: number; oy: number } | null>(null);
   const longPress = useRef<number | null>(null);
   const imgCache = useRef<Record<string, HTMLImageElement>>({});
