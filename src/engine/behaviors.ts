@@ -400,4 +400,10 @@ export const BEHAVIOR_META: Record<string, { label: string; mode?: "2d" | "3d" |
     { key: "lifetime", type: "number", default: 2.5, label: "Lifetime (s)" },
     { key: "targetTag", type: "text", default: "player", label: "Hit tag" },
   ] },
+  superSpeed:  { label: "Super Speed (power)", mode: "any", params: [{ key: "multiplier", type: "number", default: 2.5, label: "Speed ×" }, { key: "key", type: "text", default: "ShiftLeft", label: "Key (or button 'run')" }] },
+  doubleJump:  { label: "Double Jump (power)", mode: "2d",  params: [{ key: "maxJumps", type: "number", default: 2, label: "Max jumps" }, { key: "force", type: "number", default: 480, label: "Extra jump force" }] },
+  shield:      { label: "Shield (power)",      mode: "any", params: [{ key: "reduce", type: "number", default: 0.8, label: "Damage reduce (0-1)" }, { key: "key", type: "text", default: "KeyQ", label: "Key (or button 'shield')" }] },
+  healOverTime:{ label: "Heal Over Time",      mode: "any", params: [{ key: "amount", type: "number", default: 2, label: "HP / tick" }, { key: "interval", type: "number", default: 1, label: "Interval (s)" }] },
+  gravityFlip: { label: "Gravity Flip (power)", mode: "any", params: [{ key: "key", type: "text", default: "KeyG", label: "Trigger key" }] },
+  timeSlow:    { label: "Time Slow (power)",   mode: "any", params: [{ key: "scale", type: "number", default: 0.4, label: "Time scale" }, { key: "key", type: "text", default: "KeyV", label: "Key (or button 'slowmo')" }] },
 };
