@@ -338,17 +338,35 @@ function SceneSettingsPanel() {
       </Section>
 
       <Section title="Action Buttons">
+        <p className="text-[10px] text-muted-foreground mb-2">Tap the <em>Action</em> dropdown to bind a power or built-in action to each button.</p>
         {s.buttons.map((b, i) => (
           <div key={i} className="border rounded-md p-2 mb-2 bg-muted/30">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium">{b.label} → {b.key}</span>
               <button onClick={() => setSettings((x) => { x.buttons.splice(i, 1); })}><X className="w-3 h-3" /></button>
             </div>
+            <Field label="Action">
+              <Select value={b.key} onValueChange={(v) => setSettings((x) => { x.buttons[i].key = v; })}>
+                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="jump">Jump</SelectItem>
+                  <SelectItem value="attack">Attack</SelectItem>
+                  <SelectItem value="action">Interact / Action</SelectItem>
+                  <SelectItem value="run">Run (Super Speed)</SelectItem>
+                  <SelectItem value="superSpeed">Super Speed (power)</SelectItem>
+                  <SelectItem value="shield">Shield (power)</SelectItem>
+                  <SelectItem value="slowmo">Time Slow (power)</SelectItem>
+                  <SelectItem value="doubleJump">Double Jump (uses jump)</SelectItem>
+                  <SelectItem value="dash">Dash</SelectItem>
+                  <SelectItem value="shoot">Shoot</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
             <div className="grid grid-cols-2 gap-1">
               <Field label="Label"><Input value={b.label} onChange={(e) => setSettings((x) => { x.buttons[i].label = e.target.value; })} className="h-7" /></Field>
-              <Field label="Key"><Input value={b.key} onChange={(e) => setSettings((x) => { x.buttons[i].key = e.target.value; })} className="h-7" /></Field>
               <Field label="Size"><Input type="number" value={b.size} onChange={(e) => setSettings((x) => { x.buttons[i].size = +e.target.value; })} className="h-7" /></Field>
               <Field label="Color"><input type="color" value={b.color} onChange={(e) => setSettings((x) => { x.buttons[i].color = e.target.value; })} className="h-7 w-full rounded border bg-transparent" /></Field>
+              <Field label="Custom key"><Input value={b.key} onChange={(e) => setSettings((x) => { x.buttons[i].key = e.target.value; })} className="h-7" /></Field>
               <Field label="X (right)"><Input type="number" value={b.x} onChange={(e) => setSettings((x) => { x.buttons[i].x = +e.target.value; })} className="h-7" /></Field>
               <Field label="Y (bottom)"><Input type="number" value={b.y} onChange={(e) => setSettings((x) => { x.buttons[i].y = +e.target.value; })} className="h-7" /></Field>
             </div>

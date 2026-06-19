@@ -6,6 +6,21 @@ import { MobileControls } from "./MobileControls";
 import { EnemyPicker } from "./EnemyPicker";
 import { HealthHud } from "./HealthHud";
 import { makeEnemy, makeCustomEnemy } from "@/engine/enemies";
+import { ZoomIn, ZoomOut, Maximize2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Plus, Minus } from "lucide-react";
+
+const QUICK_NODES: { t: NodeType; label: string; icon: string }[] = [
+  { t: "node2d", label: "Node2D", icon: "◯" },
+  { t: "sprite", label: "Sprite", icon: "🖼" },
+  { t: "text", label: "Text", icon: "🅰" },
+  { t: "button", label: "Button", icon: "🔘" },
+  { t: "staticBody2d", label: "Platform", icon: "▭" },
+  { t: "rigidBody2d", label: "RigidBody", icon: "⬛" },
+  { t: "area2d", label: "Trigger", icon: "▢" },
+  { t: "light2d", label: "Light", icon: "💡" },
+  { t: "particles2d", label: "Particles", icon: "✦" },
+  { t: "player2d", label: "Player", icon: "🏃" },
+  { t: "camera2d", label: "Camera", icon: "🎥" },
+];
 
 export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: string) => void }) {
   const doc = useEditor((s) => s.doc);
@@ -13,6 +28,7 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
   const select = useEditor((s) => s.select);
   const update = useEditor((s) => s.updateNode);
   const add = useEditor((s) => s.addNode);
+  const updateSettings = useEditor((s) => s.updateSettings);
   const enemyMode = useEditor((s) => s.enemyMode);
   const setEnemyMode = useEditor((s) => s.setEnemyMode);
   const cvRef = useRef<HTMLCanvasElement>(null);
@@ -21,6 +37,8 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
   const [, force] = useState(0);
   const [picker, setPicker] = useState<{ sx: number; sy: number; lx: number; ly: number } | null>(null);
   const [sceneMenu, setSceneMenu] = useState<{ sx: number; sy: number; lx: number; ly: number } | null>(null);
+  // Editor camera (zoom + pan) — only affects the editor view, not the runtime.
+  const [view, setView] = useState({ zoom: 1, panX: 0, panY: 0 });
   const drag = useRef<{ id: string; ox: number; oy: number } | null>(null);
   const longPress = useRef<number | null>(null);
   const imgCache = useRef<Record<string, HTMLImageElement>>({});
@@ -220,11 +238,45 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
             background: doc.settings.background,
             objectFit: "contain",
             touchAction: playing ? "none" : "pan-x",
+            transform: playing ? undefined : `translate(${view.panX}px, ${view.panY}px) scale(${view.zoom})`,
+            transformOrigin: "center center",
+            transition: "transform 80ms",
           }}
         />
         {playing && rtRef.current && <HealthHud rt={rtRef.current} mode="2d" />}
         {playing && doc.settings.mobileControls && rtRef.current && (
           <MobileControls input={rtRef.current.input} joystick={doc.settings.joystick} buttons={doc.settings.buttons} />
+        )}
+
+        {/* ============ Editor overlay controls (only while editing) ============ */}
+        {!playing && (
+          <>
+            {/* Zoom + map-length controls (top-right) */}
+            <div className="absolute top-2 right-2 z-30 flex flex-col gap-1 bg-background/85 backdrop-blur rounded-md border border-primary/30 p-1 shadow-lg">
+              <button onClick={() => setView((v) => ({ ...v, zoom: Math.min(3, +(v.zoom + 0.2).toFixed(2)) }))} className="p-1.5 hover:bg-accent rounded" aria-label="Zoom in"><ZoomIn className="w-4 h-4" /></button>
+              <div className="text-[9px] text-center text-muted-foreground tabular-nums">{Math.round(view.zoom * 100)}%</div>
+              <button onClick={() => setView((v) => ({ ...v, zoom: Math.max(0.3, +(v.zoom - 0.2).toFixed(2)) }))} className="p-1.5 hover:bg-accent rounded" aria-label="Zoom out"><ZoomOut className="w-4 h-4" /></button>
+              <button onClick={() => setView({ zoom: 1, panX: 0, panY: 0 })} className="p-1.5 hover:bg-accent rounded" aria-label="Reset view"><Maximize2 className="w-4 h-4" /></button>
+              <div className="h-px bg-border my-0.5" />
+              <div className="text-[9px] text-center text-muted-foreground">MAP W</div>
+              <button onClick={() => updateSettings((s) => { s.width = Math.min(20000, s.width + 200); })} className="p-1.5 hover:bg-accent rounded" aria-label="Increase map width"><Plus className="w-4 h-4" /></button>
+              <div className="text-[9px] text-center text-muted-foreground tabular-nums">{doc.settings.width}</div>
+              <button onClick={() => updateSettings((s) => { s.width = Math.max(320, s.width - 200); })} className="p-1.5 hover:bg-accent rounded" aria-label="Decrease map width"><Minus className="w-4 h-4" /></button>
+            </div>
+
+            {/* Editor pan joystick / d-pad (bottom-left) */}
+            <div className="absolute bottom-2 left-2 z-30 grid grid-cols-3 gap-0.5 bg-background/85 backdrop-blur rounded-full border border-primary/30 p-1 shadow-lg" style={{ width: 120, height: 120 }}>
+              <div />
+              <button onPointerDown={(e) => panHold(e, setView, 0, 30)} className="grid place-items-center hover:bg-accent rounded" aria-label="Pan up"><ChevronUp className="w-4 h-4" /></button>
+              <div />
+              <button onPointerDown={(e) => panHold(e, setView, 30, 0)} className="grid place-items-center hover:bg-accent rounded" aria-label="Pan left"><ChevronLeft className="w-4 h-4" /></button>
+              <button onClick={() => setView({ zoom: 1, panX: 0, panY: 0 })} className="grid place-items-center hover:bg-accent rounded text-[10px] text-muted-foreground">⌂</button>
+              <button onPointerDown={(e) => panHold(e, setView, -30, 0)} className="grid place-items-center hover:bg-accent rounded" aria-label="Pan right"><ChevronRight className="w-4 h-4" /></button>
+              <div />
+              <button onPointerDown={(e) => panHold(e, setView, 0, -30)} className="grid place-items-center hover:bg-accent rounded" aria-label="Pan down"><ChevronDown className="w-4 h-4" /></button>
+              <div />
+            </div>
+          </>
         )}
       </div>
       {picker && (
@@ -243,19 +295,51 @@ export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: st
         />
       )}
       {sceneMenu && (
-        <div className="fixed z-50 min-w-48 rounded-md border bg-popover p-1 text-popover-foreground shadow-xl" style={{ left: sceneMenu.sx, top: sceneMenu.sy }}>
-          <button
-            onClick={() => {
-              add(newNode("node2d", { x: sceneMenu.lx, y: sceneMenu.ly }));
-              setSceneMenu(null);
-            }}
-            className="w-full rounded-sm px-2 py-2 text-left text-xs hover:bg-accent"
-          >
-            Ajouter une node dans la scène
-          </button>
+        <div
+          className="fixed z-50 w-64 max-h-[60vh] overflow-auto rounded-md border bg-popover p-2 text-popover-foreground shadow-xl animate-fade-in"
+          style={{ left: Math.min(sceneMenu.sx, window.innerWidth - 270), top: Math.min(sceneMenu.sy, window.innerHeight - 320) }}
+        >
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground px-1 pb-1">Add a node here</div>
+          <div className="grid grid-cols-3 gap-1">
+            {QUICK_NODES.map((q) => (
+              <button
+                key={q.t}
+                onClick={() => {
+                  add(newNode(q.t, { x: sceneMenu.lx, y: sceneMenu.ly }));
+                  setSceneMenu(null);
+                }}
+                className="flex flex-col items-center gap-0.5 p-2 rounded-md hover:bg-accent hover:text-primary text-[10px] border border-transparent hover:border-primary/30"
+              >
+                <span className="text-base leading-none">{q.icon}</span>
+                <span className="truncate w-full text-center">{q.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
       {sceneMenu && <div className="fixed inset-0 z-40" onPointerDown={() => setSceneMenu(null)} />}
     </div>
   );
+}
+
+function panHold(
+  e: React.PointerEvent,
+  setView: React.Dispatch<React.SetStateAction<{ zoom: number; panX: number; panY: number }>>,
+  dx: number,
+  dy: number,
+) {
+  e.preventDefault();
+  const target = e.currentTarget as HTMLElement;
+  const tick = () => setView((v) => ({ ...v, panX: v.panX + dx, panY: v.panY + dy }));
+  tick();
+  const id = window.setInterval(tick, 90);
+  const stop = () => {
+    window.clearInterval(id);
+    target.removeEventListener("pointerup", stop);
+    target.removeEventListener("pointercancel", stop);
+    target.removeEventListener("pointerleave", stop);
+  };
+  target.addEventListener("pointerup", stop);
+  target.addEventListener("pointercancel", stop);
+  target.addEventListener("pointerleave", stop);
 }
