@@ -300,6 +300,58 @@ const REGISTRY: Record<string, Fn> = {
     };
     c.doc.nodes.push(bullet);
   },
+  // ============= POWERS =============
+  superSpeed: (_n, p, c) => {
+    // Hold the configured key (or "run" button) to multiply movement speed.
+    const key = String(p.key || "ShiftLeft");
+    const active = c.input.isDown(key) || c.input.buttons.has("run") || c.input.buttons.has("superSpeed");
+    const mul = active ? Number(p.multiplier ?? 2.5) : 1;
+    const s = c.state as any;
+    if (c.mode === "2d") {
+      (c.state as RuntimeState2D).vx *= mul;
+    } else {
+      const s3 = c.state as RuntimeState3D;
+      s3.vx *= mul; s3.vz *= mul;
+    }
+    s._fxSpeed = active;
+  },
+  doubleJump: (_n, p, c) => {
+    if (c.mode !== "2d") return;
+    const s = c.state as RuntimeState2D & { _jumpCount?: number; _jumpHeldDJ?: boolean };
+    if (s.grounded) s._jumpCount = 0;
+    const pressing = c.input.isJump();
+    if (pressing && !s._jumpHeldDJ && !s.grounded && (s._jumpCount ?? 0) < Number(p.maxJumps ?? 2) - 1) {
+      s.vy = -Number(p.force ?? 480);
+      s._jumpCount = (s._jumpCount ?? 0) + 1;
+      c.log?.("Double jump!");
+    }
+    s._jumpHeldDJ = pressing;
+  },
+  shield: (n, p, c) => {
+    // While button "shield" or chosen key is held, incoming damage is reduced.
+    const active = c.input.buttons.has("shield") || c.input.isDown(String(p.key || "KeyQ"));
+    n.props.__shielded = active;
+    n.props.__shieldReduce = Number(p.reduce ?? 0.8); // 80% reduction
+  },
+  healOverTime: (n, p, c) => {
+    const s = c.state as any;
+    s._healT = (s._healT || 0) + c.dt;
+    const period = Number(p.interval ?? 1);
+    if (s._healT < period) return;
+    s._healT = 0;
+    const max = Number(n.props.maxHp ?? 100);
+    n.props.hp = Math.min(max, Number(n.props.hp ?? max) + Number(p.amount ?? 2));
+  },
+  gravityFlip: (_n, p, c) => {
+    if (!c.input.wasPressed(String(p.key || "KeyG"))) return;
+    c.doc.settings.gravity = -c.doc.settings.gravity;
+    c.log?.("Gravity flipped: " + c.doc.settings.gravity);
+  },
+  timeSlow: (_n, p, c) => {
+    // Toggle slow-mo: cuts dt for subsequent physics by scaling.
+    const active = c.input.buttons.has("slowmo") || c.input.isDown(String(p.key || "KeyV"));
+    (c as any).__timeScale = active ? Number(p.scale ?? 0.4) : 1;
+  },
 };
 
 function findByName(doc: SceneDoc, name: string): GameNode | null {
