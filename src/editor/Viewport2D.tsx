@@ -6,6 +6,21 @@ import { MobileControls } from "./MobileControls";
 import { EnemyPicker } from "./EnemyPicker";
 import { HealthHud } from "./HealthHud";
 import { makeEnemy, makeCustomEnemy } from "@/engine/enemies";
+import { ZoomIn, ZoomOut, Maximize2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Plus, Minus } from "lucide-react";
+
+const QUICK_NODES: { t: NodeType; label: string; icon: string }[] = [
+  { t: "node2d", label: "Node2D", icon: "◯" },
+  { t: "sprite", label: "Sprite", icon: "🖼" },
+  { t: "text", label: "Text", icon: "🅰" },
+  { t: "button", label: "Button", icon: "🔘" },
+  { t: "staticBody2d", label: "Platform", icon: "▭" },
+  { t: "rigidBody2d", label: "RigidBody", icon: "⬛" },
+  { t: "area2d", label: "Trigger", icon: "▢" },
+  { t: "light2d", label: "Light", icon: "💡" },
+  { t: "particles2d", label: "Particles", icon: "✦" },
+  { t: "player2d", label: "Player", icon: "🏃" },
+  { t: "camera2d", label: "Camera", icon: "🎥" },
+];
 
 export function Viewport2D({ playing, onLog }: { playing: boolean; onLog: (m: string) => void }) {
   const doc = useEditor((s) => s.doc);
